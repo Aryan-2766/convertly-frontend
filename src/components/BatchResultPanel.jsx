@@ -57,11 +57,12 @@ export default function BatchResultPanel({ results = [], onReset, label = 'Batch
             </div>
             <a
               className="download-btn small"
-              href={`/api/jobs/${r.jobId}/download`}
+              href={`${(import.meta.env.VITE_API_BASE || '').replace(/\/$/, '')}/api/jobs/${r.jobId}/download`}
               download={r.outputFileName}
             >
               ↓ Download
             </a>
+
           </div>
         ))}
       </div>

@@ -13,7 +13,11 @@ export default function JobResultCard({ result, onReset }) {
 
   const handleDownload = () => {
     // Initiate direct download from backend streaming endpoint
-    window.location.href = result.downloadUrl;
+    const url = result.downloadUrl || (result.jobId ? `/api/jobs/${result.jobId}/download` : '#');
+    // If url starts with /api and API_BASE is absolute (e.g. Render URL), prefix it
+    const apiBase = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '');
+    const finalUrl = apiBase && url.startsWith('/api') ? `${apiBase}${url.replace('/api', '/api')}` : url;
+    window.location.href = finalUrl;
   };
 
   return (
