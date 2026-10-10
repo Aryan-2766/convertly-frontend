@@ -7,11 +7,12 @@ export default function AdvisorModal({ isOpen, onClose }) {
   const [advice, setAdvice] = useState(null);
 
   const samplePrompts = [
-    'Which format is best for website images?',
-    'When should I use PNG instead of WebP or JPG?',
-    'What does PDF merging do?',
-    'How do I convert Word DOCX to PDF?'
+    'What is the best photo size for desktop wallpaper?',
+    'Which document format is best for legal contracts?',
+    'What resolution is required for 300 DPI poster printing?',
+    'When should I convert PNG to WebP?'
   ];
+
 
   const handleAsk = async (textToAsk) => {
     const q = textToAsk || query;
@@ -43,8 +44,9 @@ export default function AdvisorModal({ isOpen, onClose }) {
         <div className="modal-header">
           <div className="modal-title-group">
             <h3 className="modal-title">Smart Format Advisor</h3>
-            <span className="ephemeral-tag">Local Rules Engine • Zero Cost</span>
+            <span className="ephemeral-tag">AI &amp; Expert Knowledge Engine</span>
           </div>
+
           <button type="button" className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
 
