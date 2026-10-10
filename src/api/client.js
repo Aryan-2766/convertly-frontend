@@ -77,3 +77,72 @@ export async function resizeImageApi({ file, width, height, keepAspectRatio, tar
   return json.data;
 }
 
+export async function mergePdfsApi(files) {
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append('files', file);
+  }
+
+  const res = await fetch(`${API_BASE}/files/pdfs/merge`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.message || `PDF merge failed with status ${res.status}`);
+  }
+  return json.data;
+}
+
+export async function splitPdfApi({ file, pageRange }) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('pageRange', pageRange || 'all');
+
+  const res = await fetch(`${API_BASE}/files/pdfs/split`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.message || `PDF split failed with status ${res.status}`);
+  }
+  return json.data;
+}
+
+export async function convertDocxToPdfApi(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE}/files/documents/docx-to-pdf`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.message || `DOCX conversion failed with status ${res.status}`);
+  }
+  return json.data;
+}
+
+export async function fetchHistoryApi() {
+  const res = await fetch(`${API_BASE}/history`, {
+    headers: { 'Accept': 'application/json' },
+  });
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function askAdvisorApi(query) {
+  const res = await fetch(`${API_BASE}/assistant/suggest`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+  const json = await res.json();
+  return json.data;
+}
+

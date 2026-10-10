@@ -3,23 +3,38 @@ import Header from './components/Header';
 import ToolCard from './components/ToolCard';
 import FileUploadZone from './components/FileUploadZone';
 import ImageToolPanel from './components/ImageToolPanel';
+import PdfToolPanel from './components/PdfToolPanel';
+import DocumentToolPanel from './components/DocumentToolPanel';
 import JobResultCard from './components/JobResultCard';
-import { fetchHealth, fetchTools, convertImageApi, resizeImageApi } from './api/client';
+import HistoryModal from './components/HistoryModal';
+import AdvisorModal from './components/AdvisorModal';
+import {
+  fetchHealth,
+  fetchTools,
+  convertImageApi,
+  resizeImageApi,
+  mergePdfsApi,
+  splitPdfApi,
+  convertDocxToPdfApi
+} from './api/client';
 import './App.css';
 
 export default function App() {
   const [health, setHealth] = useState(null);
   const [healthLoading, setHealthLoading] = useState(true);
   const [tools, setTools] = useState([]);
-  const [toolsLoading, setToolsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
 
-  // Active Tool & Conversion Pipeline State
+  // Active Tool & Workspace State
   const [activeTool, setActiveTool] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [conversionResult, setConversionResult] = useState(null);
   const [processingError, setProcessingError] = useState(null);
+
+  // Modals state
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
 
   const checkConnection = async () => {
     setHealthLoading(true);
@@ -34,12 +49,11 @@ export default function App() {
   };
 
   const loadTools = async () => {
-    setToolsLoading(true);
     try {
       const data = await fetchTools();
       setTools(data);
     } catch (err) {
-      // Fallback local tool list if backend is starting
+      // Fallback local tool list
       setTools([
         {
           id: 'image-convert',
@@ -112,8 +126,6 @@ export default function App() {
           available: false
         }
       ]);
-    } finally {
-      setToolsLoading(false);
     }
   };
 
@@ -127,13 +139,19 @@ export default function App() {
     setSelectedFile(null);
     setConversionResult(null);
     setProcessingError(null);
-    // Smooth scroll to workspace
     setTimeout(() => {
       document.getElementById('active-workspace')?.scrollIntoView({ behavior: 'smooth' });
     }, 50);
   };
 
-  const handleConvertAction = async ({ file, targetFormat, quality }) => {
+  const handleResetWorkspace = () => {
+    setSelectedFile(null);
+    setConversionResult(null);
+    setProcessingError(null);
+  };
+
+  // Image actions
+  const handleImageConvert = async ({ file, targetFormat, quality }) => {
     setIsProcessing(true);
     setProcessingError(null);
     try {
@@ -146,7 +164,7 @@ export default function App() {
     }
   };
 
-  const handleResizeAction = async ({ file, width, height, keepAspectRatio, targetFormat, quality }) => {
+  const handleImageResize = async ({ file, width, height, keepAspectRatio, targetFormat, quality }) => {
     setIsProcessing(true);
     setProcessingError(null);
     try {
@@ -159,10 +177,45 @@ export default function App() {
     }
   };
 
-  const handleResetWorkspace = () => {
-    setSelectedFile(null);
-    setConversionResult(null);
+  // PDF actions
+  const handlePdfMerge = async (files) => {
+    setIsProcessing(true);
     setProcessingError(null);
+    try {
+      const result = await mergePdfsApi(files);
+      setConversionResult(result);
+    } catch (err) {
+      setProcessingError(err.message || 'PDF merge failed.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePdfSplit = async ({ file, pageRange }) => {
+    setIsProcessing(true);
+    setProcessingError(null);
+    try {
+      const result = await splitPdfApi({ file, pageRange });
+      setConversionResult(result);
+    } catch (err) {
+      setProcessingError(err.message || 'PDF split failed.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Document action
+  const handleDocxConvert = async (file) => {
+    setIsProcessing(true);
+    setProcessingError(null);
+    try {
+      const result = await convertDocxToPdfApi(file);
+      setConversionResult(result);
+    } catch (err) {
+      setProcessingError(err.message || 'DOCX to PDF conversion failed.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const categories = ['ALL', 'IMAGES', 'PDFS', 'DOCUMENTS', 'AUDIO', 'VIDEO'];
@@ -180,6 +233,8 @@ export default function App() {
           checkConnection();
           loadTools();
         }}
+        onOpenHistory={() => setIsHistoryOpen(true)}
+        onOpenAdvisor={() => setIsAdvisorOpen(true)}
       />
 
       <main className="main-content">
@@ -238,7 +293,9 @@ export default function App() {
           <section id="active-workspace" className="tool-workspace">
             <div className="workspace-header">
               <div className="workspace-title-box">
-                <span className="category-tag cat-images">{activeTool.category}</span>
+                <span className={`category-tag cat-${activeTool.category.toLowerCase()}`}>
+                  {activeTool.category}
+                </span>
                 <h2 className="workspace-title">{activeTool.name}</h2>
               </div>
               <button
@@ -250,31 +307,62 @@ export default function App() {
               </button>
             </div>
 
-            {/* Step 1: Upload File */}
-            <FileUploadZone
-              file={selectedFile}
-              onFileSelected={(f) => {
-                setSelectedFile(f);
-                setConversionResult(null);
-                setProcessingError(null);
-              }}
-              onFileRemoved={handleResetWorkspace}
-              disabled={isProcessing}
-            />
+            {/* Render Tool based on selected tool type */}
+            {!conversionResult ? (
+              <>
+                {/* 1. IMAGE TOOLS */}
+                {activeTool.category === 'IMAGES' && (
+                  <>
+                    <FileUploadZone
+                      file={selectedFile}
+                      onFileSelected={(f) => {
+                        setSelectedFile(f);
+                        setConversionResult(null);
+                        setProcessingError(null);
+                      }}
+                      onFileRemoved={handleResetWorkspace}
+                      disabled={isProcessing}
+                    />
+                    {selectedFile && (
+                      <ImageToolPanel
+                        file={selectedFile}
+                        isProcessing={isProcessing}
+                        onConvert={handleImageConvert}
+                        onResize={handleImageResize}
+                        error={processingError}
+                      />
+                    )}
+                  </>
+                )}
 
-            {/* Step 2: Settings & Conversion Action */}
-            {selectedFile && !conversionResult && (
-              <ImageToolPanel
-                file={selectedFile}
-                isProcessing={isProcessing}
-                onConvert={handleConvertAction}
-                onResize={handleResizeAction}
-                error={processingError}
-              />
-            )}
+                {/* 2. PDF TOOLS */}
+                {activeTool.category === 'PDFS' && (
+                  <PdfToolPanel
+                    toolId={activeTool.id}
+                    isProcessing={isProcessing}
+                    onMerge={handlePdfMerge}
+                    onSplit={handlePdfSplit}
+                    error={processingError}
+                  />
+                )}
 
-            {/* Step 3: Result & Download */}
-            {conversionResult && (
+                {/* 3. DOCUMENT TOOLS */}
+                {activeTool.category === 'DOCUMENTS' && (
+                  <DocumentToolPanel
+                    file={selectedFile}
+                    onFileSelected={(f) => {
+                      setSelectedFile(f);
+                      setConversionResult(null);
+                      setProcessingError(null);
+                    }}
+                    isProcessing={isProcessing}
+                    onConvert={handleDocxConvert}
+                    error={processingError}
+                  />
+                )}
+              </>
+            ) : (
+              /* Conversion Result & Download Action */
               <JobResultCard
                 result={conversionResult}
                 onReset={handleResetWorkspace}
@@ -309,8 +397,20 @@ export default function App() {
       </main>
 
       <footer className="app-footer">
-        <p>Convertly © 2026 — College Full Stack Development Project. Local ImageIO processing with Aiven Cloud MySQL.</p>
+        <p>Convertly © 2026 — College Full Stack Development Project. Local processing with Aiven Cloud MySQL.</p>
       </footer>
+
+      {/* History Modal */}
+      <HistoryModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+      />
+
+      {/* Format Advisor Modal */}
+      <AdvisorModal
+        isOpen={isAdvisorOpen}
+        onClose={() => setIsAdvisorOpen(false)}
+      />
     </div>
   );
 }

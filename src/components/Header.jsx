@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Header({ health, loading, onRefresh }) {
+export default function Header({ health, loading, onRefresh, onOpenHistory, onOpenAdvisor }) {
   const getBadge = () => {
     if (loading) {
       return {
@@ -56,6 +56,24 @@ export default function Header({ health, loading, onRefresh }) {
           </div>
 
           <button
+            type="button"
+            className="header-action-btn"
+            onClick={onOpenAdvisor}
+            title="Ask format recommendations"
+          >
+            ✨ Ask Advisor
+          </button>
+
+          <button
+            type="button"
+            className="header-action-btn"
+            onClick={onOpenHistory}
+            title="View Aiven MySQL conversion history"
+          >
+            📋 History
+          </button>
+
+          <button
             className="refresh-btn"
             onClick={onRefresh}
             disabled={loading}
@@ -71,3 +89,4 @@ export default function Header({ health, loading, onRefresh }) {
     </header>
   );
 }
+
