@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import ToolCard from './components/ToolCard';
-import { fetchHealth, fetchTools } from './api/client';
+import FileUploadZone from './components/FileUploadZone';
+import ImageToolPanel from './components/ImageToolPanel';
+import JobResultCard from './components/JobResultCard';
+import { fetchHealth, fetchTools, convertImageApi, resizeImageApi } from './api/client';
 import './App.css';
 
 export default function App() {
@@ -10,7 +13,13 @@ export default function App() {
   const [tools, setTools] = useState([]);
   const [toolsLoading, setToolsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
+
+  // Active Tool & Conversion Pipeline State
   const [activeTool, setActiveTool] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [conversionResult, setConversionResult] = useState(null);
+  const [processingError, setProcessingError] = useState(null);
 
   const checkConnection = async () => {
     setHealthLoading(true);
@@ -30,22 +39,22 @@ export default function App() {
       const data = await fetchTools();
       setTools(data);
     } catch (err) {
-      // Fallback local tool list if backend is momentarily unreachable
+      // Fallback local tool list if backend is starting
       setTools([
         {
           id: 'image-convert',
           name: 'Image Format Converter',
-          description: 'Convert images between JPG, PNG, WebP, and BMP.',
+          description: 'Convert images between JPG, PNG, WebP, and BMP with high fidelity.',
           category: 'IMAGES',
           phase: 'MVP',
-          supportedInputFormats: ['jpg', 'jpeg', 'png', 'webp'],
-          supportedOutputFormats: ['jpg', 'jpeg', 'png', 'webp'],
+          supportedInputFormats: ['jpg', 'jpeg', 'png', 'webp', 'bmp'],
+          supportedOutputFormats: ['jpg', 'jpeg', 'png', 'webp', 'bmp'],
           available: true
         },
         {
           id: 'image-resize',
           name: 'Image Resizer & Compressor',
-          description: 'Resize dimensions and adjust quality settings for web performance.',
+          description: 'Resize dimensions and adjust quality settings for optimal web performance.',
           category: 'IMAGES',
           phase: 'MVP',
           supportedInputFormats: ['jpg', 'jpeg', 'png', 'webp'],
@@ -55,7 +64,7 @@ export default function App() {
         {
           id: 'pdf-merge',
           name: 'PDF Merger',
-          description: 'Combine multiple PDF documents into a single organized file.',
+          description: 'Combine multiple PDF documents into a single organized PDF file.',
           category: 'PDFS',
           phase: 'MVP',
           supportedInputFormats: ['pdf'],
@@ -113,6 +122,49 @@ export default function App() {
     loadTools();
   }, []);
 
+  const handleToolSelect = (tool) => {
+    setActiveTool(tool);
+    setSelectedFile(null);
+    setConversionResult(null);
+    setProcessingError(null);
+    // Smooth scroll to workspace
+    setTimeout(() => {
+      document.getElementById('active-workspace')?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+  };
+
+  const handleConvertAction = async ({ file, targetFormat, quality }) => {
+    setIsProcessing(true);
+    setProcessingError(null);
+    try {
+      const result = await convertImageApi({ file, targetFormat, quality });
+      setConversionResult(result);
+    } catch (err) {
+      setProcessingError(err.message || 'Conversion failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleResizeAction = async ({ file, width, height, keepAspectRatio, targetFormat, quality }) => {
+    setIsProcessing(true);
+    setProcessingError(null);
+    try {
+      const result = await resizeImageApi({ file, width, height, keepAspectRatio, targetFormat, quality });
+      setConversionResult(result);
+    } catch (err) {
+      setProcessingError(err.message || 'Resize failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleResetWorkspace = () => {
+    setSelectedFile(null);
+    setConversionResult(null);
+    setProcessingError(null);
+  };
+
   const categories = ['ALL', 'IMAGES', 'PDFS', 'DOCUMENTS', 'AUDIO', 'VIDEO'];
 
   const filteredTools = selectedCategory === 'ALL'
@@ -131,7 +183,7 @@ export default function App() {
       />
 
       <main className="main-content">
-        {/* Cloud & Ephemeral Architecture Notice */}
+        {/* Architecture Notice Banner */}
         <section className="notice-banner">
           <div className="banner-row">
             <div className="banner-icon">
@@ -141,12 +193,12 @@ export default function App() {
             </div>
             <div>
               <div className="banner-title">
-                Cloud-Connected Architecture & Transient Storage
+                Cloud Database & Transient File Processing
                 <span className="banner-pill">Zero Permanent Local Storage</span>
               </div>
               <p className="banner-text">
-                All metadata and conversion audit logs are routed to <strong>Aiven Cloud MySQL</strong>.
-                Uploaded files are processed strictly in-memory or inside an auto-purging ephemeral scratch folder and deleted immediately after conversion.
+                All metadata and conversion audit logs are recorded in <strong>Aiven Cloud MySQL</strong>.
+                Conversions run strictly in-memory or in an auto-purged scratch folder with 15-minute expiration, guaranteeing zero permanent files on disk.
               </p>
             </div>
           </div>
@@ -163,7 +215,7 @@ export default function App() {
               </span>
             </div>
             <div className="diag-item">
-              <span className="diag-label">Database Connection</span>
+              <span className="diag-label">Cloud MySQL Status</span>
               <span className="diag-value">
                 {health ? health.databaseStatus : (healthLoading ? 'Checking...' : 'Disconnected')}
               </span>
@@ -175,13 +227,63 @@ export default function App() {
               </span>
             </div>
             <div className="diag-item">
-              <span className="diag-label">Cloud Target</span>
+              <span className="diag-label">Cloud Database</span>
               <span className="diag-value">Aiven MySQL (SSL Required)</span>
             </div>
           </div>
         </section>
 
-        {/* Category Filters */}
+        {/* Active Tool Processing Workspace */}
+        {activeTool && (
+          <section id="active-workspace" className="tool-workspace">
+            <div className="workspace-header">
+              <div className="workspace-title-box">
+                <span className="category-tag cat-images">{activeTool.category}</span>
+                <h2 className="workspace-title">{activeTool.name}</h2>
+              </div>
+              <button
+                type="button"
+                className="btn-close-workspace"
+                onClick={() => setActiveTool(null)}
+              >
+                ✕ Close Workspace
+              </button>
+            </div>
+
+            {/* Step 1: Upload File */}
+            <FileUploadZone
+              file={selectedFile}
+              onFileSelected={(f) => {
+                setSelectedFile(f);
+                setConversionResult(null);
+                setProcessingError(null);
+              }}
+              onFileRemoved={handleResetWorkspace}
+              disabled={isProcessing}
+            />
+
+            {/* Step 2: Settings & Conversion Action */}
+            {selectedFile && !conversionResult && (
+              <ImageToolPanel
+                file={selectedFile}
+                isProcessing={isProcessing}
+                onConvert={handleConvertAction}
+                onResize={handleResizeAction}
+                error={processingError}
+              />
+            )}
+
+            {/* Step 3: Result & Download */}
+            {conversionResult && (
+              <JobResultCard
+                result={conversionResult}
+                onReset={handleResetWorkspace}
+              />
+            )}
+          </section>
+        )}
+
+        {/* Category Filter Bar */}
         <div className="filter-bar">
           {categories.map(cat => (
             <button
@@ -200,47 +302,14 @@ export default function App() {
             <ToolCard
               key={tool.id}
               tool={tool}
-              onSelect={(t) => setActiveTool(t)}
+              onSelect={handleToolSelect}
             />
           ))}
         </div>
-
-        {/* Tool Selection Preview Modal */}
-        {activeTool && (
-          <div style={{
-            marginTop: '2rem',
-            padding: '1.5rem',
-            background: 'var(--bg-secondary)',
-            borderRadius: 'var(--card-radius)',
-            border: '1px solid var(--accent-primary)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>Selected: {activeTool.name}</h3>
-              <button
-                onClick={() => setActiveTool(null)}
-                style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', cursor: 'pointer' }}
-              >
-                ✕ Close
-              </button>
-            </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              {activeTool.description}
-            </p>
-            <div style={{
-              background: 'var(--bg-primary)',
-              padding: '1rem',
-              borderRadius: '8px',
-              fontSize: '0.85rem',
-              color: 'var(--text-secondary)'
-            }}>
-              <strong>Phase 1 Foundation Verified:</strong> This tool interface is ready. In the next phase, we attach the multipart upload dropzone and processing pipeline!
-            </div>
-          </div>
-        )}
       </main>
 
       <footer className="app-footer">
-        <p>Convertly © 2026 — College Full Stack Development Project. Local processing with Aiven Cloud MySQL.</p>
+        <p>Convertly © 2026 — College Full Stack Development Project. Local ImageIO processing with Aiven Cloud MySQL.</p>
       </footer>
     </div>
   );
