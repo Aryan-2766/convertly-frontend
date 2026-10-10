@@ -1269,3 +1269,149 @@
   padding-left: 1.25rem;
   margin-top: 0.35rem;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Phase 2 — FFmpeg Unavailable Notice
+   ───────────────────────────────────────────────────────────── */
+
+.unavailable-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  margin: 1rem 0;
+}
+
+.unavailable-icon { font-size: 1.6rem; flex-shrink: 0; }
+
+.unavailable-notice strong {
+  display: block;
+  font-size: 1rem;
+  color: #fbbf24;
+  margin-bottom: 0.4rem;
+}
+
+.unavailable-notice p {
+  color: var(--text-secondary);
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.unavailable-notice code {
+  display: inline-block;
+  background: var(--bg-secondary);
+  color: #34d399;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  margin-top: 0.25rem;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Phase 2 — Batch Result Panel
+   ───────────────────────────────────────────────────────────── */
+
+.batch-result-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.batch-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.batch-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.batch-count {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+}
+
+.batch-zip-btn {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: opacity 0.2s;
+}
+.batch-zip-btn:hover { opacity: 0.85; }
+
+.batch-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.batch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  gap: 1rem;
+}
+
+.batch-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  overflow: hidden;
+}
+
+.batch-item-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.batch-item-meta { font-size: 0.75rem; color: var(--text-secondary); }
+
+.download-btn.small {
+  flex-shrink: 0;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  border-radius: 6px;
+}
+
+/* Phase 2 misc */
+.cat-documents { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.phase-phase_2 { background: rgba(168, 85, 247, 0.15); color: #c084fc; }

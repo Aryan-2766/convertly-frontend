@@ -146,3 +146,62 @@ export async function askAdvisorApi(query) {
   return json.data;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Phase 2: Audio / Video / Batch
+// ─────────────────────────────────────────────────────────────
+
+export async function convertAudioApi(file, outputFormat) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('outputFormat', outputFormat);
+
+  const res = await fetch(`${API_BASE}/files/audio/convert`, {
+    method: 'POST',
+    body: formData,
+  });
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.message || `Audio conversion failed (${res.status})`);
+  }
+  return json.data;
+}
+
+export async function convertVideoApi(file, outputFormat, resolution = 'original') {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('outputFormat', outputFormat);
+  formData.append('resolution', resolution);
+
+  const res = await fetch(`${API_BASE}/files/video/convert`, {
+    method: 'POST',
+    body: formData,
+  });
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.message || `Video conversion failed (${res.status})`);
+  }
+  return json.data;
+}
+
+export async function extractAudioApi(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE}/files/video/extract-audio`, {
+    method: 'POST',
+    body: formData,
+  });
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.message || `Audio extraction failed (${res.status})`);
+  }
+  return json.data;
+}
+
+/**
+ * Returns the GET URL for batch ZIP download.
+ * @param {string[]} jobIds
+ */
+export function getBatchDownloadUrl(jobIds) {
+  return `${API_BASE}/batch/download?jobIds=${encodeURIComponent(jobIds.join(','))}`;
+}

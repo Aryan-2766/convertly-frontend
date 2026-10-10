@@ -5,6 +5,8 @@ import FileUploadZone from './components/FileUploadZone';
 import ImageToolPanel from './components/ImageToolPanel';
 import PdfToolPanel from './components/PdfToolPanel';
 import DocumentToolPanel from './components/DocumentToolPanel';
+import AudioToolPanel from './components/AudioToolPanel';
+import VideoToolPanel from './components/VideoToolPanel';
 import JobResultCard from './components/JobResultCard';
 import HistoryModal from './components/HistoryModal';
 import AdvisorModal from './components/AdvisorModal';
@@ -358,6 +360,20 @@ export default function App() {
                     isProcessing={isProcessing}
                     onConvert={handleDocxConvert}
                     error={processingError}
+                  />
+                )}
+
+                {/* 4. AUDIO TOOLS */}
+                {activeTool.category === 'AUDIO' && (
+                  <AudioToolPanel
+                    ffmpegAvailable={activeTool.available}
+                  />
+                )}
+
+                {/* 5. VIDEO TOOLS */}
+                {activeTool.category === 'VIDEO' && (
+                  <VideoToolPanel
+                    ffmpegAvailable={activeTool.available}
                   />
                 )}
               </>

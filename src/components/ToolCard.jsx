@@ -1,27 +1,36 @@
 import React from 'react';
 
 export default function ToolCard({ tool, onSelect }) {
-  const isMvp = tool.phase === 'MVP';
+  const isAvailable = tool.available !== false; // default true if not set
 
   const getCategoryColor = (category) => {
     switch (category) {
-      case 'IMAGES': return 'cat-images';
-      case 'PDFS': return 'cat-pdfs';
+      case 'IMAGES':    return 'cat-images';
+      case 'PDFS':      return 'cat-pdfs';
       case 'DOCUMENTS': return 'cat-docs';
-      case 'AUDIO': return 'cat-audio';
-      case 'VIDEO': return 'cat-video';
-      default: return 'cat-default';
+      case 'AUDIO':     return 'cat-audio';
+      case 'VIDEO':     return 'cat-video';
+      default:          return 'cat-default';
     }
   };
 
+  const getPhaseBadge = (phase) => {
+    if (!phase) return '';
+    return `phase-${phase.toLowerCase()}`;
+  };
+
+  const phaseLabel = tool.phase === 'MVP' ? 'MVP'
+    : tool.phase === 'PHASE_2' ? 'Phase 2'
+    : tool.phase || '';
+
   return (
-    <div className={`tool-card ${!isMvp ? 'tool-card-disabled' : ''}`}>
+    <div className={`tool-card ${!isAvailable ? 'tool-card-disabled' : ''}`}>
       <div className="tool-card-header">
         <span className={`category-tag ${getCategoryColor(tool.category)}`}>
           {tool.category}
         </span>
-        <span className={`phase-badge ${isMvp ? 'phase-mvp' : 'phase-next'}`}>
-          {isMvp ? 'MVP' : 'Phase 2'}
+        <span className={`phase-badge ${tool.phase === 'MVP' ? 'phase-mvp' : getPhaseBadge(tool.phase)}`}>
+          {phaseLabel}
         </span>
       </div>
 
@@ -44,7 +53,7 @@ export default function ToolCard({ tool, onSelect }) {
       </div>
 
       <div className="tool-card-footer">
-        {isMvp ? (
+        {isAvailable ? (
           <button
             className="action-btn-primary"
             onClick={() => onSelect(tool)}
@@ -53,7 +62,7 @@ export default function ToolCard({ tool, onSelect }) {
           </button>
         ) : (
           <button className="action-btn-disabled" disabled>
-            Unlocks in Phase 2
+            FFmpeg required
           </button>
         )}
       </div>
