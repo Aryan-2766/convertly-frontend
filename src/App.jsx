@@ -17,8 +17,10 @@ import {
   resizeImageApi,
   mergePdfsApi,
   splitPdfApi,
-  convertDocxToPdfApi
+  convertDocxToPdfApi,
+  convertPptxToPdfApi
 } from './api/client';
+
 import './App.css';
 
 export default function App() {
@@ -104,6 +106,16 @@ export default function App() {
           category: 'DOCUMENTS',
           phase: 'MVP',
           supportedInputFormats: ['docx'],
+          supportedOutputFormats: ['pdf'],
+          available: true
+        },
+        {
+          id: 'pptx-to-pdf',
+          name: 'PPTX to PDF',
+          description: 'Convert Microsoft PowerPoint presentations (.pptx) into standard PDF slides.',
+          category: 'DOCUMENTS',
+          phase: 'MVP',
+          supportedInputFormats: ['pptx'],
           supportedOutputFormats: ['pdf'],
           available: true
         },
@@ -206,19 +218,22 @@ export default function App() {
     }
   };
 
-  // Document action
-  const handleDocxConvert = async (file) => {
+  // Document action (Word and PowerPoint to PDF)
+  const handleDocumentConvert = async (file, isPptx) => {
     setIsProcessing(true);
     setProcessingError(null);
     try {
-      const result = await convertDocxToPdfApi(file);
+      const result = isPptx
+        ? await convertPptxToPdfApi(file)
+        : await convertDocxToPdfApi(file);
       setConversionResult(result);
     } catch (err) {
-      setProcessingError(err.message || 'DOCX to PDF conversion failed.');
+      setProcessingError(err.message || (isPptx ? 'PPTX to PDF conversion failed.' : 'DOCX to PDF conversion failed.'));
     } finally {
       setIsProcessing(false);
     }
   };
+
 
   const categories = ['ALL', 'IMAGES', 'PDFS', 'DOCUMENTS', 'AUDIO', 'VIDEO'];
 
@@ -351,6 +366,7 @@ export default function App() {
                 {/* 3. DOCUMENT TOOLS */}
                 {activeTool.category === 'DOCUMENTS' && (
                   <DocumentToolPanel
+                    toolId={activeTool.id}
                     file={selectedFile}
                     onFileSelected={(f) => {
                       setSelectedFile(f);
@@ -358,10 +374,11 @@ export default function App() {
                       setProcessingError(null);
                     }}
                     isProcessing={isProcessing}
-                    onConvert={handleDocxConvert}
+                    onConvert={handleDocumentConvert}
                     error={processingError}
                   />
                 )}
+
 
                 {/* 4. AUDIO TOOLS */}
                 {activeTool.category === 'AUDIO' && (

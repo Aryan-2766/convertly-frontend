@@ -129,6 +129,23 @@ export async function convertDocxToPdfApi(file) {
   return json.data;
 }
 
+export async function convertPptxToPdfApi(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE}/files/documents/pptx-to-pdf`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.message || `PPTX conversion failed with status ${res.status}`);
+  }
+  return json.data;
+}
+
+
 export async function fetchHistoryApi() {
   const res = await fetch(`${API_BASE}/history`, {
     headers: { 'Accept': 'application/json' },

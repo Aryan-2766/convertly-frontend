@@ -1,12 +1,19 @@
 import React, { useRef } from 'react';
 
-export default function DocumentToolPanel({ file, onFileSelected, isProcessing, onConvert, error }) {
+export default function DocumentToolPanel({ toolId = 'docx-to-pdf', file, onFileSelected, isProcessing, onConvert, error }) {
   const fileInputRef = useRef(null);
+
+  const isPptx = toolId === 'pptx-to-pdf';
+  const docTypeLabel = isPptx ? 'Microsoft PowerPoint (.pptx)' : 'Microsoft Word Document (.docx)';
+  const fileExtLabel = isPptx ? 'PPTX' : 'DOCX';
+  const acceptPattern = isPptx
+    ? '.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    : '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!file || isProcessing) return;
-    onConvert(file);
+    onConvert(file, isPptx);
   };
 
   const isLibreOfficeMissing = error && error.toLowerCase().includes('libreoffice');
@@ -16,7 +23,7 @@ export default function DocumentToolPanel({ file, onFileSelected, isProcessing, 
       <div className="panel-body">
         <div className="form-group">
           <label className="form-label">
-            Microsoft Word Document (.docx)
+            {docTypeLabel}
             <span className="label-tip">Local headless conversion</span>
           </label>
 
@@ -30,7 +37,7 @@ export default function DocumentToolPanel({ file, onFileSelected, isProcessing, 
                 type="file"
                 ref={fileInputRef}
                 style={{ display: 'none' }}
-                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                accept={acceptPattern}
                 onChange={(e) => {
                   if (e.target.files && e.target.files.length > 0) {
                     onFileSelected(e.target.files[0]);
@@ -47,13 +54,13 @@ export default function DocumentToolPanel({ file, onFileSelected, isProcessing, 
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
               </div>
-              <p className="dropzone-title">Click to <span>browse DOCX document</span></p>
-              <p className="dropzone-subtitle">Convert formatting directly into standard PDF</p>
+              <p className="dropzone-title">Click to <span>browse {fileExtLabel} document</span></p>
+              <p className="dropzone-subtitle">Convert slides &amp; formatting directly into standard PDF</p>
             </div>
           ) : (
             <div className="file-preview-card">
               <div className="file-info-group">
-                <div className="file-avatar">DOC</div>
+                <div className="file-avatar">{isPptx ? 'PPT' : 'DOC'}</div>
                 <div className="file-meta">
                   <span className="file-name">{file.name}</span>
                   <span className="file-size-tag">{(file.size / 1024).toFixed(1)} KB</span>
@@ -78,11 +85,11 @@ export default function DocumentToolPanel({ file, onFileSelected, isProcessing, 
               <p style={{ fontWeight: 600 }}>{error}</p>
               {isLibreOfficeMissing && (
                 <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#e2e8f0' }}>
-                  <strong>How to enable DOCX to PDF:</strong>
+                  <strong>How to enable Office-to-PDF:</strong>
                   <ol style={{ paddingLeft: '1.25rem', marginTop: '0.25rem' }}>
-                    <li>Download LibreOffice from <a href="https://www.libreoffice.org/download/download-libreoffice/" target="_blank" rel="noreferrer" style={{ color: '#93c5fd', textDecoration: 'underline' }}>libreoffice.org</a></li>
-                    <li>Install it to standard path (e.g. <code>C:\Program Files\LibreOffice</code>)</li>
-                    <li>Convertly will automatically detect <code>soffice.exe</code>!</li>
+                    <li>Install LibreOffice from <a href="https://www.libreoffice.org/download/download-libreoffice/" target="_blank" rel="noreferrer" style={{ color: '#93c5fd', textDecoration: 'underline' }}>libreoffice.org</a></li>
+                    <li>Ensure it's in the standard directory (or system PATH)</li>
+                    <li>Convertly will automatically detect <code>soffice</code>!</li>
                   </ol>
                 </div>
               )}
@@ -98,10 +105,10 @@ export default function DocumentToolPanel({ file, onFileSelected, isProcessing, 
           {isProcessing ? (
             <span className="btn-loading-state">
               <span className="spinner"></span>
-              Converting document to PDF...
+              Converting {fileExtLabel} to PDF...
             </span>
           ) : (
-            <span>Convert DOCX to PDF</span>
+            <span>Convert {fileExtLabel} to PDF</span>
           )}
         </button>
       </div>
