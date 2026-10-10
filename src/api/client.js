@@ -2,7 +2,8 @@
  * Centralized API client for communicating with the Convertly Spring Boot backend.
  */
 
-const API_BASE = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '') || '/api';
+const rawBase = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '');
+const API_BASE = rawBase ? (rawBase.endsWith('/api') ? rawBase : `${rawBase}/api`) : '/api';
 
 export async function fetchHealth() {
   try {
